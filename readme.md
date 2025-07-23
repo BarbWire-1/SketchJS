@@ -8,7 +8,7 @@ It is more the idea of... for now very basic and simple
 ___
 Test it here with your own ideas:
 
- [![Netlify Status](https://api.netlify.com/api/v1/badges/03828b57-6a19-47b5-b8a2-7dbe61dac0a8/deploy-status)](https://app.netlify.com/projects/sketch-js/deploys)
+ [![Netlify Status](https://api.netlify.com/api/v1/badges/03828b57-6a19-47b5-b8a2-7dbe61dac0a8/deploy-status)](https://sketch-js.netlify.app/)
 
 ## What is this?
 
