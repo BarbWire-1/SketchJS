@@ -6,17 +6,11 @@
 		return match ? match[ 1 ].length : 0;
 	}
 
-	function getPropLine(i) { }
 	function parseNestedProps(lines, startLineIndex, baseIndentLevel) {
 		const properties = [];
 		let currentIndex = startLineIndex;
 
-		function addProperty({
-			name,
-			type = null,
-			typeProps = null,
-			defaultValue = null
-		}) {
+		function addProperty({ name, type = null, typeProps = null, defaultValue = null }) {
 			properties.push({
 				name,
 				type,
@@ -24,7 +18,7 @@
 				default:
 					defaultValue !== undefined && defaultValue !== null
 						? defaultValue.trim()
-						: null
+						: null,
 			});
 		}
 
@@ -44,43 +38,35 @@
 			const inlineObjectMatch = trimmedLine.match(/^([\w$]+)\s*:\s*{$/);
 			if (inlineObjectMatch) {
 				const propertyName = inlineObjectMatch[ 1 ];
-				const nestedResult = parseNestedProps(
-					lines,
-					currentIndex + 1,
-					indentLevel
-				);
+				const nestedResult = parseNestedProps(lines, currentIndex + 1, indentLevel);
 				addProperty({
 					name: propertyName,
 					type: "inlineObject",
 					typeProps: nestedResult.props,
-					defaultValue: null
+					defaultValue: null,
 				});
 				currentIndex = nestedResult.nextIndex;
 				continue;
 			}
 
 			// Typed property (e.g. propName: Type = defaultVal)
-			const typedPropertyMatch = trimmedLine.match(
-				/^([\w$]+)\s*:\s*([\w\[\]]+)(?:\s*=\s*(.+))?$/
-			);
+			const typedPropertyMatch = trimmedLine.match(/^([\w$]+)\s*:\s*([\w\[\]]+)(?:\s*=\s*(.+))?$/);
 			if (typedPropertyMatch) {
 				addProperty({
 					name: typedPropertyMatch[ 1 ],
 					type: typedPropertyMatch[ 2 ],
-					defaultValue: typedPropertyMatch[ 3 ]
+					defaultValue: typedPropertyMatch[ 3 ],
 				});
 				currentIndex++;
 				continue;
 			}
 
 			// Simple property (e.g. propName = defaultVal)
-			const simplePropertyMatch = trimmedLine.match(
-				/^([\w$]+)(?:\s*=\s*(.+))?$/
-			);
+			const simplePropertyMatch = trimmedLine.match(/^([\w$]+)(?:\s*=\s*(.+))?$/);
 			if (simplePropertyMatch) {
 				addProperty({
 					name: simplePropertyMatch[ 1 ],
-					defaultValue: simplePropertyMatch[ 2 ]
+					defaultValue: simplePropertyMatch[ 2 ],
 				});
 				currentIndex++;
 				continue;
@@ -91,7 +77,7 @@
 
 		return {
 			props: properties,
-			nextIndex: currentIndex
+			nextIndex: currentIndex,
 		};
 	}
 
@@ -101,7 +87,7 @@
 		let currentSectionName = null;
 		const data = {
 			classes: {},
-			functions: []
+			functions: [],
 		};
 		let currentLineIndex = 0;
 
@@ -109,17 +95,12 @@
 			data.classes[ className ][ sectionName ].push(property);
 		}
 
-		function addInlineObjectProperty(
-			className,
-			sectionName,
-			propName,
-			nestedProps
-		) {
+		function addInlineObjectProperty(className, sectionName, propName, nestedProps) {
 			addClassProperty(className, sectionName, {
 				name: propName,
 				type: "inlineObject",
 				typeProps: nestedProps,
-				default: null
+				default: null,
 			});
 		}
 
@@ -130,7 +111,7 @@
 				default:
 					defaultVal !== undefined && defaultVal !== null
 						? defaultVal.trim()
-						: null
+						: null,
 			});
 		}
 
@@ -141,7 +122,7 @@
 				default:
 					defaultVal !== undefined && defaultVal !== null
 						? defaultVal.trim()
-						: null
+						: null,
 			});
 		}
 
@@ -162,6 +143,25 @@
 
 			// Handle class or function section headers
 			if (indentLevel === 0) {
+				// Detect inheritance: ClassName > BaseClassName:
+				const inheritanceMatch = line.match(/^(\w+)\s*>\s*(\w+):$/);
+				if (inheritanceMatch) {
+					currentClassName = inheritanceMatch[ 1 ];
+					const baseClass = inheritanceMatch[ 2 ];
+					currentSectionName = null;
+					if (!data.classes[ currentClassName ]) {
+						data.classes[ currentClassName ] = {
+							baseClass: baseClass,
+							props: [],
+							parameters: [],
+							methods: [],
+						};
+					}
+					currentLineIndex++;
+					continue;
+				}
+
+				// Regular class header (no inheritance)
 				const classNameCandidate = parseSectionHeader(line);
 				if (classNameCandidate) {
 					currentClassName = classNameCandidate;
@@ -171,9 +171,10 @@
 						!data.classes[ currentClassName ]
 					) {
 						data.classes[ currentClassName ] = {
+							baseClass: null,
 							props: [],
 							parameters: [],
-							methods: []
+							methods: [],
 						};
 					}
 					currentLineIndex++;
@@ -203,24 +204,13 @@
 					const inlineObjectMatch = line.match(/^([\w$]+)\s*:\s*{$/);
 					if (inlineObjectMatch) {
 						const propName = inlineObjectMatch[ 1 ];
-						const nestedResult = parseNestedProps(
-							lines,
-							currentLineIndex + 1,
-							indentLevel
-						);
-						addInlineObjectProperty(
-							currentClassName,
-							currentSectionName,
-							propName,
-							nestedResult.props
-						);
+						const nestedResult = parseNestedProps(lines, currentLineIndex + 1, indentLevel);
+						addInlineObjectProperty(currentClassName, currentSectionName, propName, nestedResult.props);
 						currentLineIndex = nestedResult.nextIndex;
 						continue;
 					}
 
-					const typedPropertyMatch = line.match(
-						/^([\w$]+)\s*:\s*([^\=]+)(?:=\s*(.+))?$/
-					);
+					const typedPropertyMatch = line.match(/^([\w$]+)\s*:\s*([^\=]+)(?:=\s*(.+))?$/);
 					if (typedPropertyMatch) {
 						addTypedProperty(
 							currentClassName,
@@ -233,9 +223,7 @@
 						continue;
 					}
 
-					const simplePropertyMatch = line.match(
-						/^([\w$]+)(?:\s*=\s*(.+))?$/
-					);
+					const simplePropertyMatch = line.match(/^([\w$]+)(?:\s*=\s*(.+))?$/);
 					if (simplePropertyMatch) {
 						addSimpleProperty(
 							currentClassName,
@@ -260,15 +248,6 @@
 		}
 
 		return data;
-	}
-
-	function isClassType(typeName, classes) {
-		return classes.hasOwnProperty(typeName);
-	}
-
-	function isClassArrayType(typeName, classes) {
-		const match = typeName.match(/^(\w+)\[\]$/);
-		return match && isClassType(match[ 1 ], classes);
 	}
 
 	function isClassType(typeName, classes) {
@@ -320,21 +299,23 @@
 
 		function generateClassConstructor(cls) {
 			const paramList = cls.parameters.map((p) => p.name).join(", ");
-			let constructorCode = `  constructor(${paramList}${paramList ? ", " : ""
-				}args = {}) {\n`;
+			let constructorCode = `  constructor(${paramList}${paramList ? ", " : ""}args = {}) {\n`;
+
+			// Call super(...) if baseClass exists
+			if (cls.baseClass) {
+				constructorCode += `    super(${paramList});\n`;
+			}
 
 			// Assign constructor parameters with defaults
 			for (const param of cls.parameters) {
-				const defaultVal =
-					param.default !== null ? param.default : "null";
+				const defaultVal = param.default !== null ? param.default : "null";
 				constructorCode += `    this.${param.name} = ${param.name} !== undefined ? ${param.name} : ${defaultVal};\n`;
 			}
 
 			// Assign properties from args with defaults or new objects
 			for (const prop of cls.props) {
 				if (prop.type === "inlineObject") {
-					constructorCode += `    this.${prop.name} = args.${prop.name
-						} ?? ${renderNestedObjectInit(prop.typeProps)};\n`;
+					constructorCode += `    this.${prop.name} = args.${prop.name} ?? ${renderNestedObjectInit(prop.typeProps)};\n`;
 				} else if (prop.default !== null && prop.default !== undefined) {
 					constructorCode += `    this.${prop.name} = args.${prop.name} ?? ${prop.default};\n`;
 				} else if (prop.type) {
@@ -378,7 +359,8 @@
 		// Generate classes
 		for (const className in parsedData.classes) {
 			const cls = parsedData.classes[ className ];
-			outputCode += `class ${className} {\n`;
+			const extendsPart = cls.baseClass ? ` extends ${cls.baseClass}` : "";
+			outputCode += `class ${className}${extendsPart} {\n`;
 			outputCode += generateClassConstructor(cls);
 			outputCode += generateClassMethods(cls);
 			outputCode += "}\n\n";
@@ -393,6 +375,7 @@
 		renderStructureDiagram(parsedData);
 		renderMermaidDiagram(parsedData); // Assuming you want to keep this call
 	}
+
 
 	function renderStructureDiagram(parsed) {
 		const container = document.getElementById("structureDiagram");
