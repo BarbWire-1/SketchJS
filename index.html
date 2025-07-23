@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>DSL to JS Stub Generator</title>
+	<script type="module" src="./src/main.js"></script>
+	<link rel="stylesheet" href="./src/style.css">
+	<script type="module">
+		import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+		mermaid.initialize({
+			startOnLoad: false
+		});
+		window.mermaid = mermaid;
+	</script>
+
+</head>
+
+<body>
+
+	<h1>DSL to JS Stub Generator</h1>
+	<button onclick="downloadMarkdown()">Download Markdown</button>
+
+	<section id="codeWrapper">
+		<textarea id="dslInput" placeholder="Paste your mini-DSL here...">
+AnimationEngine:
+	props:
+		frameRate: number = 60
+		isRunning: boolean = false
+	methods:
+		start()
+		stop()
+		update()
+
+Player:
+	props:
+		name: string
+		health: number = 100
+		position: {
+			x: number = 0
+			y: number = 0
+		}
+	methods:
+		move(direction: string)
+		takeDamage(amount: number)
+		isAlive()
+
+Game:
+	props:
+		title: string = "My Game"
+		animationEngine: AnimationEngine
+		players: Player[] = []
+		activePlayer: Player = null
+	methods:
+		start()
+		stop()
+		switchActivePlayer(index: number)
+
+functions:
+	init()
+	shutdown()
+
+
+
+</textarea>
+
+		<textarea id="output"> JavaScript Output</textarea>
+	</section>
+	<button onclick="generateJS()">Generate JavaScript</button>
+	<h2>Class Structure Diagram:</h2>
+	<div id="structureDiagram"></div>
+	<div id="structureDiagram2">
+		<pre id="structureTextDiagram"></pre>
+		<div id="mermaidDiagram" class="mermaid"></div>
+	</div>
+
+	<script>
+
+	</script>
+
+</body>
+
+</html>
