@@ -6,7 +6,9 @@ A browser-based tool to parse a custom domain-specific language (DSL) for defini
 
 It is more the idea of... for now very basic and simple
 ___
+Test it here with your own ideas:
 
+ [![Netlify Status](https://api.netlify.com/api/v1/badges/03828b57-6a19-47b5-b8a2-7dbe61dac0a8/deploy-status)](https://app.netlify.com/projects/sketch-js/deploys)
 
 ## What is this?
 
@@ -102,6 +104,22 @@ function sayHello(name) {
 ```
 
 ---
+
+## 🔍 Notes on Behavior:
+* props:
+  - Default values are respected
+  - Types like string are only used for inference, not enforced at runtime
+
+  - Nested objects are supported
+
+* parameters:
+  - Appear in the constructor as named positional args
+
+* methods:
+  - If method is declared as just name, like greet, it's implemented as a stub with a log(...) call
+  - The method name is passed as a string literal to log(...)
+
+* Global DEBUG flag and log(...) helper are automatically generated
 
 
 
