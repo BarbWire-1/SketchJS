@@ -3,6 +3,8 @@
 
 
 A browser-based tool to parse a custom domain-specific language (DSL) for defining classes, properties, and functions with simple indentation syntax, and generate JavaScript class code and Mermaid diagrams from it to downlad as [markdown](exampleDownloadFile.md).
+
+It is more the idea of... for now very basic and simple
 ___
 ## What is this?
 
