@@ -263,7 +263,9 @@
 		const inputText = document.getElementById("dslInput").value;
 		const parsedData = parseDSL(inputText);
 
-		let outputCode = "";
+		let outputCode = "// AUTO-GENERATED NAKED SKELETON — meant to be fleshed out step-by-step\n\n";
+
+
 		outputCode += "const DEBUG = true;\n";
 		outputCode += "function log(msg) {\n  if (DEBUG) console.log(msg);\n}\n\n";
 
