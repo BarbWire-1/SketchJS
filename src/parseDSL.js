@@ -1,4 +1,6 @@
 // TODO - REFACTOR
+
+//TODO - inherited class does not draw relationships to comp in own props!
 (() => {
 	// Count indentation (tabs only)
 	function countIndent(line) {
