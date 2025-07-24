@@ -300,21 +300,15 @@
 		}
 
 		function generateClassConstructor(cls) {
-			const paramList = cls.parameters.map((p) => p.name).join(", ");
-			let constructorCode = `  constructor(${paramList}${paramList ? ", " : ""}args = {}) {\n`;
+			let constructorCode = `  constructor(args = {}) {\n`;
 
-			// Call super(...) if baseClass exists
 			if (cls.baseClass) {
-				constructorCode += `    super(${paramList});\n`;
+				constructorCode += `    super(args);\n`;
 			}
 
-			// Assign constructor parameters with defaults
-			for (const param of cls.parameters) {
-				const defaultVal = param.default !== null ? param.default : "null";
-				constructorCode += `    this.${param.name} = ${param.name} !== undefined ? ${param.name} : ${defaultVal};\n`;
-			}
+			// Assign constructor parameters with defaults (if you want to support explicit params, else skip)
+			// Assuming you don't have explicit params, just use props from args.
 
-			// Assign properties from args with defaults or new objects
 			for (const prop of cls.props) {
 				if (prop.type === "inlineObject") {
 					constructorCode += `    this.${prop.name} = args.${prop.name} ?? ${renderNestedObjectInit(prop.typeProps)};\n`;
@@ -336,6 +330,7 @@
 			constructorCode += "  }\n\n";
 			return constructorCode;
 		}
+
 
 		function generateClassMethods(cls) {
 			let methodsCode = "";
@@ -379,6 +374,34 @@
 	}
 
 
+	function getAllMembers(cls, parsed) {
+		// Recursively collect props, methods, parameters from base classes
+		let props = [];
+		let methods = [];
+		let parameters = [];
+
+		if (cls.baseClass) {
+			const base = parsed.classes[ cls.baseClass ];
+			if (base) {
+				const baseMembers = getAllMembers(base, parsed);
+				props = baseMembers.props;
+				methods = baseMembers.methods;
+				parameters = baseMembers.parameters;
+			}
+		}
+
+		// Combine base + own members (own overrides base)
+		const combinedProps = [ ...props, ...cls.props ];
+		const combinedMethods = [ ...methods, ...cls.methods ];
+		const combinedParameters = [ ...parameters, ...cls.parameters ];
+
+		return {
+			props: combinedProps,
+			methods: combinedMethods,
+			parameters: combinedParameters,
+		};
+	}
+
 	function renderStructureDiagram(parsed) {
 		const container = document.getElementById("structureDiagram");
 		container.innerHTML = "";
@@ -397,7 +420,6 @@
 			});
 		}
 
-		// Generic renderer helper for sections with fallback text
 		function renderSection(title, items, renderFn) {
 			const lines = [];
 			lines.push(`${title}:`);
@@ -409,16 +431,14 @@
 			return lines;
 		}
 
-		// Map section names to their render functions
 		const sectionRenderers = {
 			parameters: (items) =>
 				items.map(
 					(p) =>
-						`  ${p.name}: ${p.type || "any"}${p.default ? ` = ${p.default}` : ""
-						}`
+						`  ${p.name}: ${p.type || "any"}${p.default ? ` = ${p.default}` : ""}`
 				),
 			props: (items) => renderProps(items),
-			methods: (items) => items.map((m) => `  ${m}`)
+			methods: (items) => items.map((m) => `  ${m}`),
 		};
 
 		for (const className in parsed.classes) {
@@ -427,26 +447,28 @@
 			const wrapper = document.createElement("div");
 			const header = document.createElement("div");
 			header.className = "collapsible";
-			header.textContent = className;
+			header.textContent = className + (cls.baseClass ? ` (extends ${cls.baseClass})` : "");
 
 			const content = document.createElement("div");
 			content.className = "content";
 
 			const lines = [];
 
-			// Loop through each section using the map instead of if/else
+			// Get combined members including inherited
+			const combined = getAllMembers(cls, parsed);
+
+			// Render each section with combined members
 			for (const section of [ "parameters", "props", "methods" ]) {
 				const renderFn = sectionRenderers[ section ];
-				const items = cls[ section ] || [];
+				const items = combined[ section ] || [];
 				lines.push(...renderSection(section, items, renderFn));
-				lines.push(""); // add blank line between sections for readability
+				lines.push(""); // blank line between sections
 			}
 
 			const pre = document.createElement("pre");
 			pre.textContent = lines.join("\n");
 			content.appendChild(pre);
 
-			// Collapsible toggle
 			header.addEventListener("click", () => {
 				header.classList.toggle("active");
 				content.classList.toggle("active");
@@ -457,6 +479,7 @@
 			container.appendChild(wrapper);
 		}
 	}
+
 
 	function renderMermaidDiagram(parsed) {
 		const lines = [ "classDiagram" ];
@@ -554,7 +577,10 @@
 			lines.push(
 				`class ${className} {\n  ${classBodyLines.join("\n  ")}\n}`
 			);
-
+			// *** Add inheritance relation ***
+			if (cls.baseClass && isClassType(cls.baseClass)) {
+				lines.push(`${cls.baseClass} <|-- ${className}`);
+			}
 			const collections = getCollectionsMap(cls);
 
 			for (const prop of cls.props) {

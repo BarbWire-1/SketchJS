@@ -28,9 +28,9 @@ AnimationEngine:
 		frameRate: number = 60
 		isRunning: boolean = false
 	methods:
-		start()
-		stop()
-		update()
+		start
+		stop
+		update
 
 Player:
 	props:
@@ -44,6 +44,12 @@ Player:
 		move(direction: string)
 		takeDamage(amount: number)
 		isAlive()
+
+Warrior > Player:
+	props:
+		strength: number
+	methods:
+		fight()
 
 Game:
 	props:
