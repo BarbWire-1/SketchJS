@@ -1,0 +1,82 @@
+AnimationEngine:
+	props:
+		frameRate: number = 60
+		isRunning: boolean = false
+	methods:
+		start
+		stop
+		update
+
+Weapon:
+	props:
+		name: string
+		damage: number = 10
+		range: number = 1
+	methods:
+		use(target: Player)
+
+Sword > Weapon:
+	props:
+		sharpness: number = 50
+	methods:
+		slash(target: Player)
+
+Bow > Weapon:
+	props:
+		arrowCount: number = 20
+	methods:
+		shoot(target: Player)
+
+Staff > Weapon:
+	props:
+		magicPower: number = 100
+	methods:
+		castSpell(spellName: string, target: Player)
+
+Player:
+	props:
+		name: string
+		health: number = 100
+		position: {
+			x: number = 0
+			y: number = 0
+		}
+		weapon: Weapon = null
+	methods:
+		move(direction: string)
+		takeDamage(amount: number)
+		isAlive()
+
+Warrior > Player:
+	props:
+		strength: number = 10
+	methods:
+		fight()
+
+Archer > Player:
+	props:
+		accuracy: number = 75
+	methods:
+		shoot(target: Player)
+
+Mage > Player:
+	props:
+		mana: number = 100
+	methods:
+		castSpell(spellName: string, target: Player)
+
+Game:
+	props:
+		title: string = "My Game"
+		animationEngine: AnimationEngine
+		players: Player[] = []
+		activePlayer: Player = null
+	methods:
+		start()
+		stop()
+		switchActivePlayer(index: number)
+
+functions:
+	init()
+	shutdown()
+

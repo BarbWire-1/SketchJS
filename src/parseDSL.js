@@ -287,17 +287,23 @@
 		}
 
 		function parseMethodSignature(methodSignature) {
+			// Remove return type (e.g., ": string", ": boolean") at the end
+			methodSignature = methodSignature.replace(/:\s*\w+\s*(\/\/.*)?$/, "").trim();
+
 			const match = methodSignature.match(/^(\w+)\((.*)\)$/);
 			if (!match) return { name: methodSignature, params: "" };
 
 			const name = match[ 1 ];
 			const params = match[ 2 ]
 				.split(",")
-				.map((param) => param.trim().split(":")[ 0 ])
+				.map((param) => param.trim().split(":")[ 0 ]) // remove types
 				.filter(Boolean)
 				.join(", ");
+
 			return { name, params };
 		}
+
+
 
 		function generateClassConstructor(cls) {
 			let constructorCode = `  constructor(args = {}) {\n`;
@@ -541,9 +547,12 @@
 		// Render all method lines for a class
 		function renderMethods(cls /*, inheritedMethods = [] */) {
 			const renderMethodLine = (method) => {
-				let methodName = method;
+				// Strip return type part after closing parenthesis, e.g. ": boolean"
+				let signatureOnly = method.replace(/:\s*[^)]*$/, "").trim();
+
+				let methodName = signatureOnly;
 				let params = "";
-				const m = method.match(/^(\w+)\((.*)\)$/);
+				const m = signatureOnly.match(/^(\w+)\((.*)\)$/);
 				if (m) {
 					methodName = m[ 1 ];
 					params = m[ 2 ]
@@ -558,10 +567,11 @@
 				.map(renderMethodLine);
 			/*
 			.concat(
-				inheritedMethods.map((m) => `${renderMethodLine(m)} [i*]`)
+			  inheritedMethods.map((m) => `${renderMethodLine(m)} [i*]`)
 			);
 			*/
 		}
+
 
 		// Build a collections map for "has-one (selected from ...)" labels
 		function getCollectionsMap(cls) {
