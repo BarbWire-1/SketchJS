@@ -25,6 +25,7 @@ pre {
 	margin-bottom: 1em;
 	white-space: pre-wrap;
 	margin: 10px;
+	resize: vertical;
 }
 
 textarea {
