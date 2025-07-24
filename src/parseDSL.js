@@ -87,6 +87,7 @@
 		let currentSectionName = null;
 		const data = {
 			classes: {},
+			schemas: {}, // Added schema support
 			functions: [],
 		};
 		let currentLineIndex = 0;
@@ -95,38 +96,50 @@
 			data.classes[ className ][ sectionName ].push(property);
 		}
 
-		function addInlineObjectProperty(className, sectionName, propName, nestedProps) {
-			addClassProperty(className, sectionName, {
+		function addSchemaProperty(schemaName, property) {
+			data.schemas[ schemaName ].props.push(property);
+		}
+
+		function addInlineObjectProperty(targetName, sectionName, propName, nestedProps) {
+			const prop = {
 				name: propName,
 				type: "inlineObject",
 				typeProps: nestedProps,
 				default: null,
-			});
+			};
+			if (data.classes[ targetName ]) {
+				addClassProperty(targetName, sectionName, prop);
+			} else if (data.schemas[ targetName ]) {
+				addSchemaProperty(targetName, prop);
+			}
 		}
 
-		function addTypedProperty(className, sectionName, name, type, defaultVal) {
-			addClassProperty(className, sectionName, {
+		function addTypedProperty(targetName, sectionName, name, type, defaultVal) {
+			const prop = {
 				name: name.trim(),
 				type: type.trim(),
-				default:
-					defaultVal !== undefined && defaultVal !== null
-						? defaultVal.trim()
-						: null,
-			});
+				default: defaultVal !== undefined && defaultVal !== null ? defaultVal.trim() : null,
+			};
+			if (data.classes[ targetName ]) {
+				addClassProperty(targetName, sectionName, prop);
+			} else if (data.schemas[ targetName ]) {
+				addSchemaProperty(targetName, prop);
+			}
 		}
 
-		function addSimpleProperty(className, sectionName, name, defaultVal) {
-			addClassProperty(className, sectionName, {
+		function addSimpleProperty(targetName, sectionName, name, defaultVal) {
+			const prop = {
 				name: name.trim(),
 				type: null,
-				default:
-					defaultVal !== undefined && defaultVal !== null
-						? defaultVal.trim()
-						: null,
-			});
+				default: defaultVal !== undefined && defaultVal !== null ? defaultVal.trim() : null,
+			};
+			if (data.classes[ targetName ]) {
+				addClassProperty(targetName, sectionName, prop);
+			} else if (data.schemas[ targetName ]) {
+				addSchemaProperty(targetName, prop);
+			}
 		}
 
-		// Extracted helper to handle section names (removes trailing colon)
 		function parseSectionHeader(line) {
 			return line.endsWith(":") ? line.slice(0, -1) : null;
 		}
@@ -141,9 +154,23 @@
 				continue;
 			}
 
-			// Handle class or function section headers
+			// Handle top-level constructs
 			if (indentLevel === 0) {
-				// Detect inheritance: ClassName > BaseClassName:
+				// Handle schema:
+				const schemaMatch = line.match(/^schema\s+(\w+):$/);
+				if (schemaMatch) {
+					currentClassName = schemaMatch[ 1 ];
+					currentSectionName = null;
+					if (!data.schemas[ currentClassName ]) {
+						data.schemas[ currentClassName ] = {
+							props: [],
+						};
+					}
+					currentLineIndex++;
+					continue;
+				}
+
+				// Inheritance: Class > Base:
 				const inheritanceMatch = line.match(/^(\w+)\s*>\s*(\w+):$/);
 				if (inheritanceMatch) {
 					currentClassName = inheritanceMatch[ 1 ];
@@ -161,14 +188,16 @@
 					continue;
 				}
 
-				// Regular class header (no inheritance)
+				// Regular class (no inheritance)
 				const classNameCandidate = parseSectionHeader(line);
 				if (classNameCandidate) {
 					currentClassName = classNameCandidate;
 					currentSectionName = null;
+
 					if (
 						currentClassName !== "functions" &&
-						!data.classes[ currentClassName ]
+						!data.classes[ currentClassName ] &&
+						!data.schemas[ currentClassName ]
 					) {
 						data.classes[ currentClassName ] = {
 							baseClass: null,
@@ -182,7 +211,7 @@
 				}
 			}
 
-			// Handle first level sections inside classes or functions list
+			// Handle sections like props/methods
 			if (indentLevel === 1) {
 				if (currentClassName === "functions") {
 					data.functions.push(line);
@@ -198,7 +227,7 @@
 				}
 			}
 
-			// Handle nested properties or methods
+			// Handle properties or methods
 			if (indentLevel === 2 && currentClassName && currentSectionName) {
 				if ([ "props", "parameters" ].includes(currentSectionName)) {
 					const inlineObjectMatch = line.match(/^([\w$]+)\s*:\s*{$/);
@@ -234,7 +263,6 @@
 						currentLineIndex++;
 						continue;
 					}
-
 					currentLineIndex++;
 					continue;
 				} else if (currentSectionName === "methods") {
@@ -246,9 +274,10 @@
 
 			currentLineIndex++;
 		}
-
+//console.log(JSON.stringify(data))
 		return data;
 	}
+
 
 	function isClassType(typeName, classes) {
 		return Object.prototype.hasOwnProperty.call(classes, typeName);
@@ -258,7 +287,7 @@
 		const match = typeName.match(/^(\w+)\[\]$/);
 		return match && isClassType(match[ 1 ], classes);
 	}
-
+/*
 	function generateJS() {
 		const inputText = document.getElementById("dslInput").value;
 		const parsedData = parseDSL(inputText);
@@ -361,6 +390,7 @@
 
 		// Generate classes
 		for (const className in parsedData.classes) {
+			if ([ "props", "methods", "parameters" ].includes(className)) continue;
 			const cls = parsedData.classes[ className ];
 			const extendsPart = cls.baseClass ? ` extends ${cls.baseClass}` : "";
 			outputCode += `class ${className}${extendsPart} {\n`;
@@ -378,6 +408,137 @@
 		renderStructureDiagram(parsedData);
 		renderMermaidDiagram(parsedData); // Assuming you want to keep this call
 	}
+*/
+	// Patch the generateJS function to skip schemas in class output and handle schema-typed props correctly
+	function generateJS() {
+		const inputText = document.getElementById("dslInput").value;
+		const parsedData = parseDSL(inputText);
+
+		let outputCode = "// AUTO-GENERATED NAKED SKELETON — meant to be fleshed out step-by-step\n\n";
+
+		outputCode += "const DEBUG = true;\n";
+		outputCode += "function log(msg) {\n  if (DEBUG) console.log(msg);\n}\n\n";
+
+		function isClassTypeLocal(type) {
+			return isClassType(type, parsedData.classes);
+		}
+
+		function isClassArrayTypeLocal(type) {
+			return isClassArrayType(type, parsedData.classes);
+		}
+
+		function isSchemaType(type) {
+			return parsedData.schemas && Object.prototype.hasOwnProperty.call(parsedData.schemas, type);
+		}
+
+		function renderNestedObjectInit(typeProps) {
+			const parts = typeProps.map((prop) => {
+				const val = prop.default !== null ? prop.default : "null";
+				return `${prop.name}: ${val}`;  // keys without quotes here
+			});
+			return `{ ${parts.join(", ")} }`;
+		}
+
+
+		function parseMethodSignature(methodSignature) {
+			methodSignature = methodSignature.replace(/:\s*\w+\s*(\/\/.*)?$/, "").trim();
+			const match = methodSignature.match(/^(\w+)\((.*)\)$/);
+			if (!match) return { name: methodSignature, params: "" };
+			const name = match[ 1 ];
+			const params = match[ 2 ]
+				.split(",")
+				.map((param) => param.trim().split(":")[ 0 ])
+				.filter(Boolean)
+				.join(", ");
+			return { name, params };
+		}
+
+		function generateClassConstructor(cls) {
+			let constructorCode = `  constructor(args = {}) {\n`;
+			if (cls.baseClass) {
+				constructorCode += `    super(args);\n`;
+			}
+
+			for (const prop of cls.props) {
+				if (prop.type && parsedData.schemas && parsedData.schemas[ prop.type ]) {
+					constructorCode += `    this.${prop.name} = args.${prop.name} ?? {...${prop.type}};\n`;
+				} else if (prop.type === "inlineObject") {
+					constructorCode += `    this.${prop.name} = args.${prop.name} ?? ${renderNestedObjectInit(prop.typeProps)};\n`;
+				} else if (prop.default !== null && prop.default !== undefined) {
+					constructorCode += `    this.${prop.name} = args.${prop.name} ?? ${prop.default};\n`;
+				} else if (prop.type) {
+					if (isClassTypeLocal(prop.type)) {
+						constructorCode += `    this.${prop.name} = args.${prop.name} ?? new ${prop.type}();\n`;
+					} else if (isClassArrayTypeLocal(prop.type)) {
+						constructorCode += `    this.${prop.name} = args.${prop.name} ?? [];\n`;
+					} else if (isSchemaType(prop.type)) {
+						constructorCode += `    this.${prop.name} = args.${prop.name} ?? {};\n`;
+					} else {
+						constructorCode += `    this.${prop.name} = args.${prop.name} ?? null;\n`;
+					}
+				} else {
+					constructorCode += `    this.${prop.name} = args.${prop.name} ?? null;\n`;
+				}
+			}
+
+			constructorCode += "  }\n\n";
+			return constructorCode;
+		}
+
+		function generateClassMethods(cls) {
+			let methodsCode = "";
+			for (const methodSignature of cls.methods) {
+				const { name, params } = parseMethodSignature(methodSignature);
+				methodsCode += `  ${name}(${params}) {\n`;
+				methodsCode += `    log(\"Running '${name}'\");\n`;
+				methodsCode += `    // TODO: Implement ${name}\n`;
+				methodsCode += `  }\n\n`;
+			}
+			return methodsCode;
+		}
+
+		function generateFunctionCode(funcSignature) {
+			const { name, params } = parseMethodSignature(funcSignature);
+			let functionCode = `function ${name}(${params}) {\n`;
+			functionCode += `  log(\"Running '${name}'\");\n`;
+			functionCode += `  // TODO: Implement ${name}\n`;
+			functionCode += `}\n\n`;
+			return functionCode;
+		}
+
+		for (const className in parsedData.classes) {
+			const rawName = className.replace(/^class\s+/, "");
+			const cls = parsedData.classes[ className ];
+			const extendsPart = cls.baseClass ? ` extends ${cls.baseClass}` : "";
+			outputCode += `class ${rawName}${extendsPart} {\n`;
+			outputCode += generateClassConstructor(cls);
+			outputCode += generateClassMethods(cls);
+			outputCode += `}\n\n`;
+		}
+
+		// Generate classes from schemas as well
+		for (const schemaName in parsedData.schemas) {
+			const schema = parsedData.schemas[ schemaName ];
+			const parts = schema.props.map(prop => {
+				const defaultVal = prop.default !== null && prop.default !== undefined ? prop.default : 'null';
+				return `  ${prop.name}: ${defaultVal}`;
+			});
+
+			outputCode += `const ${schemaName} = {\n${parts.join(",\n")}\n};\n\n`;
+		}
+
+
+
+
+		for (const func of parsedData.functions) {
+			outputCode += generateFunctionCode(func);
+		}
+
+		document.getElementById("output").textContent = outputCode.trim();
+		renderStructureDiagram(parsedData);
+		renderMermaidDiagram(parsedData);
+	}
+
 
 
 	function getAllMembers(cls, parsed) {
@@ -484,6 +645,44 @@
 			wrapper.appendChild(content);
 			container.appendChild(wrapper);
 		}
+
+		// Render schemas
+		for (const schemaName in parsed.schemas) {
+			const schema = parsed.schemas[ schemaName ];
+
+			const wrapper = document.createElement("div");
+			const header = document.createElement("div");
+			header.className = "collapsible";
+			header.textContent = schemaName + " (schema)";
+
+			const content = document.createElement("div");
+			content.className = "content";
+
+			const lines = [];
+			lines.push("props:");
+			if (schema.props.length) {
+				schema.props.forEach(p => {
+					lines.push(`  ${p.name}: ${p.type || "any"}${p.default ? ` = ${p.default}` : ""}`);
+				});
+			} else {
+				lines.push("  (none)");
+			}
+			lines.push("");
+
+			const pre = document.createElement("pre");
+			pre.textContent = lines.join("\n");
+			content.appendChild(pre);
+
+			header.addEventListener("click", () => {
+				header.classList.toggle("active");
+				content.classList.toggle("active");
+			});
+
+			wrapper.appendChild(header);
+			wrapper.appendChild(content);
+			container.appendChild(wrapper);
+		}
+
 	}
 
 
@@ -659,6 +858,7 @@
 				}
 			}
 		}
+
 
 		// Render Mermaid
 		const container = document.getElementById("mermaidDiagram");
