@@ -495,6 +495,21 @@
 			return parsed.classes.hasOwnProperty(typeName);
 		}
 
+		/*
+		// Recursively get inherited props and methods
+		function getInheritedMembers(clsName, parsed) {
+			const cls = parsed.classes[clsName];
+			if (!cls || !cls.baseClass) return { props: [], methods: [] };
+			const base = parsed.classes[cls.baseClass];
+			if (!base) return { props: [], methods: [] };
+			const baseInherited = getInheritedMembers(cls.baseClass, parsed);
+			return {
+				props: [...base.props, ...baseInherited.props],
+				methods: [...base.methods, ...baseInherited.methods],
+			};
+		}
+		*/
+
 		// Render constructor signature line(s)
 		function renderConstructor(cls) {
 			if (cls.parameters && cls.parameters.length > 0) {
@@ -505,21 +520,27 @@
 		}
 
 		// Render all props lines for a class
-		function renderProps(cls) {
-			return cls.props.map((prop) => {
-				const typeStr = prop.type || "any";
-				if (prop.default !== null && prop.default !== undefined) {
-					return `+${prop.name}: ${sanitize(typeStr)} = ${sanitize(
-						prop.default
-					)}`;
-				}
-				return `+${prop.name}: ${sanitize(typeStr)}`;
-			});
+		function renderProps(cls /*, inheritedProps = [] */) {
+			return cls.props.map(
+				(prop) =>
+					`+${prop.name}: ${sanitize(prop.type || "any")}${prop.default !== null && prop.default !== undefined
+						? ` = ${sanitize(prop.default)}`
+						: ""
+					}`
+			);
+			/*
+			.concat(
+				inheritedProps.map(
+					(p) =>
+						`+${sanitize(p.name)}: ${sanitize(p.type || "any")} [i*]`
+				)
+			);
+			*/
 		}
 
 		// Render all method lines for a class
-		function renderMethods(cls) {
-			return cls.methods.map((method) => {
+		function renderMethods(cls /*, inheritedMethods = [] */) {
+			const renderMethodLine = (method) => {
 				let methodName = method;
 				let params = "";
 				const m = method.match(/^(\w+)\((.*)\)$/);
@@ -532,7 +553,14 @@
 						.join(", ");
 				}
 				return `+${sanitize(methodName)}(${sanitize(params)})`;
-			});
+			};
+			return cls.methods
+				.map(renderMethodLine);
+			/*
+			.concat(
+				inheritedMethods.map((m) => `${renderMethodLine(m)} [i*]`)
+			);
+			*/
 		}
 
 		// Build a collections map for "has-one (selected from ...)" labels
@@ -566,21 +594,38 @@
 			}
 		}
 
+
+		// Add inheritance relation
+		function addInheritanceRelation(className, baseClass) {
+			const relKey = `${className}->${baseClass}_inherits`;
+			if (!relationsSet.has(relKey)) {
+				lines.push(`${baseClass} <|-- ${className}`);
+				relationsSet.add(relKey);
+			}
+		}
+
+
 		for (const className in parsed.classes) {
 			const cls = parsed.classes[ className ];
+
+
+			// Add inheritance arrow if baseClass exists
+			if (cls.baseClass && isClassType(cls.baseClass)) {
+				addInheritanceRelation(className, cls.baseClass);
+			}
+/*
+			// Get inherited members
+			const inherited = getInheritedMembers(className, parsed);
+			*/
+
 			const classBodyLines = [
 				...renderConstructor(cls),
-				...renderProps(cls),
-				...renderMethods(cls)
+				...renderProps(cls /*, inherited.props */),
+				...renderMethods(cls /*, inherited.methods */),
 			];
 
-			lines.push(
-				`class ${className} {\n  ${classBodyLines.join("\n  ")}\n}`
-			);
-			// *** Add inheritance relation ***
-			if (cls.baseClass && isClassType(cls.baseClass)) {
-				lines.push(`${cls.baseClass} <|-- ${className}`);
-			}
+			lines.push(`class ${className} {\n  ${classBodyLines.join("\n  ")}\n}`);
+
 			const collections = getCollectionsMap(cls);
 
 			for (const prop of cls.props) {
@@ -598,8 +643,7 @@
 				if (isClassType(prop.type)) {
 					let label = "has-a";
 					if (collections.hasOwnProperty(prop.type)) {
-						label = `has-one (selected from ${collections[ prop.type ]
-							})`;
+						label = `has-one (selected from ${collections[ prop.type ]})`;
 					}
 					addHasOneRelation(className, prop.type, label);
 				}
@@ -612,20 +656,20 @@
 		if (window.mermaid) {
 			window.mermaid.init(undefined, container.querySelector(".mermaid"));
 		}
+
 		const textarea = document.getElementById("dslInput");
 		textarea.addEventListener("keydown", function (e) {
 			if (e.key === "Tab") {
 				e.preventDefault();
 				const start = this.selectionStart;
 				const end = this.selectionEnd;
-				this.value =
-					this.value.substring(0, start) +
-					"\t" +
-					this.value.substring(end);
+				this.value = this.value.substring(0, start) + "\t" + this.value.substring(end);
 				this.selectionStart = this.selectionEnd = start + 1;
 			}
 		});
 	}
+
+
 
 	///
 	function svgToBase64DataUrl(svgElement) {
@@ -650,11 +694,11 @@
 
 		const mdContent = [
 			"# Sketched Classes\n",
-			"```js",
+			"```bash",
 			dslInput,
 			"```",
 			"\n# Generated JS\n",
-			"```",
+			"```js",
 			outputCode,
 			"```",
 			"\n# Mermaid Diagram\n",
