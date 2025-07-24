@@ -66,6 +66,14 @@ functions:
 	init()
 	shutdown()
 
+schema WeaponType:
+	props:
+		id: string
+		baseDamage: number = 10
+
+class Weapon:
+	props:
+		weaponType: WeaponType
 
 
 </textarea>
