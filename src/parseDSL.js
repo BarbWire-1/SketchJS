@@ -411,6 +411,7 @@
 		renderMermaidDiagram(parsedData); // Assuming you want to keep this call
 	}
 */
+	/*
 	// Patch the generateJS function to skip schemas in class output and handle schema-typed props correctly
 	function generateJS() {
 		const inputText = document.getElementById("dslInput").value;
@@ -536,10 +537,226 @@
 			outputCode += generateFunctionCode(func);
 		}
 
-		document.getElementById("output").textContent = outputCode.trim();
+		const outputCodeBlock = document.getElementById("output");
+
+// 1. Set generated JS code
+outputCodeBlock.textContent = outputCode.trim();
+
+// 2. Manually trigger Prism highlighting
+// This line is 100% required for dynamic content
+if (window.Prism && typeof Prism.highlightElement === 'function') {
+	Prism.highlightElement(outputCodeBlock);
+} else {
+	console.warn("Prism.js not loaded correctly.");
+}
+
 		renderStructureDiagram(parsedData);
 		renderMermaidDiagram(parsedData);
 	}
+
+*/
+	function generateJS() {
+		const inputText = document.getElementById("dslInput").value;
+		const parsedData = parseDSL(inputText);
+
+		// Semantic wrappers
+		function kw(word) { return `<span class="kw">${word}</span>`; }
+		function punct(c) { return `<span class="punct">${c}</span>`; }
+		function op(op) { return `<span class="op">${op}</span>`; }
+		function id(name) { return `<span class="id">${name}</span>`; }
+		function prop(name) { return `<span class="prop">${name}</span>`; }
+		function lit(value) {
+			if (value === "null") return `<span class="lit">null</span>`;
+			if (value === "true" || value === true) return `<span class="kw">true</span>`;
+			if (value === "false" || value === false) return `<span class="kw">false</span>`;
+			if (!isNaN(value) && value !== "") return `<span class="num">${value}</span>`;
+			if (typeof value === "string") return `<span class="lit">"${value}"</span>`;
+			return `<span class="id">${value}</span>`;
+		}
+		function comment(text) {
+			return `<span class="comment">${text}</span>`;
+		}
+
+
+		function clsName(name) { return `<span class="class">${name}</span>`; }
+
+		function wrapArgsProp(name) {
+			return id("args") + punct(".") + prop(name);
+		}
+		function wrapThisProp(name) {
+			return kw("this") + punct(".") + prop(name);
+		}
+
+		function isClassTypeLocal(type) {
+			return isClassType(type, parsedData.classes);
+		}
+		function isClassArrayTypeLocal(type) {
+			return isClassArrayType(type, parsedData.classes);
+		}
+		function isSchemaType(type) {
+			return parsedData.schemas && Object.prototype.hasOwnProperty.call(parsedData.schemas, type);
+		}
+
+		function renderNestedObjectInit(typeProps) {
+			const parts = typeProps.map(prop =>
+				id(prop.name) + punct(":") + " " + (prop.default !== null ? lit(prop.default) : lit("null"))
+			);
+			return punct("{") + " " + parts.join(punct(",") + " ") + " " + punct("}");
+		}
+
+
+		function parseMethodSignature(methodSignature) {
+			methodSignature = methodSignature.replace(/:\s*\w+\s*(\/\/.*)?$/, "").trim();
+			const match = methodSignature.match(/^(\w+)\((.*)\)$/);
+			if (!match) return { name: methodSignature, params: "" };
+			const name = match[ 1 ];
+			const params = match[ 2 ]
+				.split(",")
+				.map(param => param.trim().split(":")[ 0 ])
+				.filter(Boolean)
+				.map(id)
+				.join(punct(", ") + " ");
+			return { name: id(name), params };
+		}
+
+		function generateClassConstructor(cls) {
+			let constructorCode = "  " + kw("constructor") + punct("(") + id("args") + op("=") + punct("{") + punct("}") + punct(")") + " " + punct("{") + "\n";
+
+			if (cls.baseClass) {
+				constructorCode += "    " + kw("super") + punct("(") + id("args") + punct(")") + punct(";") + "\n";
+			}
+
+			for (const prop of cls.props) {
+				let assignment;
+				if (prop.type && parsedData.schemas?.[ prop.type ]) {
+					assignment = punct("{") + op("...") + id(prop.type) + punct("}");
+				} else if (prop.type === "inlineObject") {
+					assignment = renderNestedObjectInit(prop.typeProps);
+				} else if (prop.default !== null && prop.default !== undefined) {
+					assignment = lit(prop.default);
+				} else if (prop.type) {
+					if (isClassTypeLocal(prop.type)) {
+						assignment = kw("new") + " " + clsName(prop.type) + punct("()");
+					} else if (isClassArrayTypeLocal(prop.type)) {
+						assignment = punct("[") + punct("]");
+					} else if (isSchemaType(prop.type)) {
+						assignment = punct("{") + punct("}");
+					} else {
+						assignment = lit("null");
+					}
+				} else {
+					assignment = lit("null");
+				}
+
+				constructorCode +=
+					"    " +
+					wrapThisProp(prop.name) + " " +
+					op("=") + " " +
+					wrapArgsProp(prop.name) + " " +
+					op("??") + " " +
+					assignment + punct(";") + "\n";
+			}
+
+			constructorCode += "  " + punct("}") + "\n\n";
+			return constructorCode;
+		}
+
+		function generateClassMethods(cls) {
+			let methodsCode = "";
+			for (const methodSignature of cls.methods) {
+				const { name, params } = parseMethodSignature(methodSignature);
+				methodsCode +=
+					"  " +
+					name + punct("(") + params + punct(")") + " " + punct("{") + "\n" +
+					"    " + kw("log") + punct("(") + lit(`Running '${name.replace(/<[^>]+>/g, "")}'`) + punct(")") + punct(";") + "\n" +
+					"    " + kw("// TODO: Implement") + " " + name + "\n" +
+					"  " + punct("}") + "\n\n";
+			}
+			return methodsCode;
+		}
+
+		function generateFunctionCode(funcSignature) {
+			const { name, params } = parseMethodSignature(funcSignature);
+			let functionCode =
+				kw("function") + " " +
+				name + punct("(") + params + punct(")") + " " + punct("{") + "\n" +
+				"  " + kw("log") + punct("(") + lit(`Running '${name.replace(/<[^>]+>/g, "")}'`) + punct(")") + punct(";") + "\n" +
+				"  " + kw("// TODO: Implement") + " " + name + "\n" +
+				punct("}") + "\n\n";
+			return functionCode;
+		}
+
+		// Header comment
+		let outputCode = kw("// AUTO-GENERATED NAKED SKELETON — meant to be fleshed out step-by-step") + "\n\n";
+
+		outputCode += kw("const") + " " + id("DEBUG") + " " + op("=") + " " + kw("true") + punct(";") + "\n";
+		outputCode += kw("function") + " " + id("log") + punct("(") + id("msg") + punct(")") + " " + punct("{") + "\n";
+		outputCode += "  " + kw("if") + punct("(") + id("DEBUG") + ") " + kw("console") + punct(".") + kw("log") + punct("(") + id("msg") + punct(")") + punct(";") + "\n";
+		outputCode += punct("}") + "\n\n";
+
+		for (const className in parsedData.classes) {
+			const rawName = className.replace(/^class\s+/, "");
+			const cls = parsedData.classes[ className ];
+			const extendsPart = cls.baseClass ? " " + kw("extends") + " " + clsName(cls.baseClass) : "";
+			outputCode += kw("class") + " " + clsName(rawName) + extendsPart + " " + punct("{") + "\n";
+			outputCode += generateClassConstructor(cls);
+			outputCode += generateClassMethods(cls);
+			outputCode += punct("}") + "\n\n";
+		}
+
+		// Generate schemas as constants
+		for (const schemaName in parsedData.schemas) {
+			const schema = parsedData.schemas[ schemaName ];
+			const parts = schema.props.map(prop => {
+				const defaultVal = (prop.default !== null && prop.default !== undefined) ? lit(prop.default) : lit("null");
+				return "  " + id(prop.name) + punct(":") + " " + defaultVal;
+			});
+			outputCode += kw("const") + " " + id(schemaName) + " " + op("=") + " " + punct("{") + "\n" +
+				parts.join(punct(",") + "\n") + "\n" + punct("}") + punct(";") + "\n\n";
+		}
+
+		for (const func of parsedData.functions) {
+			outputCode += generateFunctionCode(func);
+		}
+		function wrapComments(code) {
+			// regex to find comments
+			const regex = /\/\/.*$|\/\*[\s\S]*?\*\//gm;
+			return code.replace(regex, comment => `<span class="comment">${comment}</span>`);
+		}
+/*
+		let codeWithComments = wrapComments(outputCode);
+
+		// Step 2: Split by comment spans so you isolate comments
+		const parts = codeWithComments.split(/(<span class="comment">[\s\S]*?<\/span>)/g);
+
+		// Step 3: Highlight only the non-comment parts
+		const highlightedParts = parts.map(part => {
+			if (part.startsWith('<span class="comment">')) {
+				// This is a comment - return as-is
+				return part;
+			}
+			// Non-comment code - apply your existing highlight here
+			return highlightNonCommentCode(part);
+		});
+
+		// Step 4: Join everything
+		const finalCode = highlightedParts.join('');
+
+*/
+		const outputCodeBlock = document.getElementById("output");
+		outputCodeBlock.innerHTML = wrapComments(outputCode.trim());
+
+
+		if (window.Prism && typeof Prism.highlightElement === "function") {
+			Prism.highlightElement(outputCodeBlock);
+		} else {
+			console.warn("Prism.js not loaded correctly.");
+		}
+
+		renderStructureDiagram(parsedData);
+		renderMermaidDiagram(parsedData);
+	}
+
 
 
 

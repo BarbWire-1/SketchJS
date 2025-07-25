@@ -1,5 +1,5 @@
 import "./parseDSL.js"
-
+// TODO STYLING!!!!!!!
 document.getElementById("dslInput").addEventListener("keydown", function (e) {
 	if (e.key === "Tab") {
 		e.preventDefault();

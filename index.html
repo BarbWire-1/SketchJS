@@ -5,25 +5,37 @@
 	<meta charset="UTF-8" />
 	<title>SketchJS - Map your thoughts to code</title>
 	<script type="module" src="./src/main.js"></script>
-	<link rel="stylesheet" href="./src/style.css">
+	<link rel="stylesheet" href="./src/style.css" />
+<!--
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" />
+
+
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-clike.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+-->
+
+
+
+	<!-- Mermaid -->
 	<script type="module">
 		import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-		mermaid.initialize({
-			startOnLoad: false
-		});
+		mermaid.initialize({ startOnLoad: false });
 		window.mermaid = mermaid;
 	</script>
-
 </head>
 
 <body>
-
 	<h1>SketchJS</h1>
-	<button onclick="downloadMarkdown()">Download Markdown</button>
+
+	<div class="button-group">
+		<button onclick="generateJS()">Generate JavaScript</button>
+		<button onclick="downloadMarkdown()">Download Markdown</button>
+	</div>
 
 	<section id="codeWrapper">
-		<textarea id="dslInput" placeholder="Paste your mini-DSL here...">
-AnimationEngine:
+		<textarea id="dslInput" placeholder="Paste your mini-DSL here...">AnimationEngine:
 	props:
 		frameRate: number = 60
 		isRunning: boolean = false
@@ -72,27 +84,21 @@ schema WeaponType:
 		id: string
 		baseDamage: number = 10
 
-class Weapon:
+Weapon:
 	props:
-		weaponType: WeaponType
+		weaponType: WeaponType</textarea>
 
-
-</textarea>
-
-		<textarea id="output" readonly> JavaScript Output</textarea>
+		<!-- Use <pre><code> for Prism -->
+		<pre id="output">// JavaScript output will appear here</pre>
 	</section>
-	<button onclick="generateJS()">Generate JavaScript</button>
+
 	<h2>Class Structure Diagram:</h2>
-	<div id="structureDiagram"></div>
-	<div id="structureDiagram2">
-		<pre id="structureTextDiagram"></pre>
-		<div id="mermaidDiagram" class="mermaid"></div>
+	<div class="container" id="structureDiagram" ></div>
+
+	<div class="container" id="structureDiagram2">
+
+		<div id="mermaidDiagram" class="mermaid container">Mermaid UML</div>
 	</div>
-
-	<script>
-
-	</script>
-
 </body>
 
 </html>

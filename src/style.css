@@ -1,12 +1,17 @@
 body {
 	font-family: monospace;
-
+	background: #1e1e1e;
+	color: #eee;
 	margin: 2em auto;
 	padding: 1em;
-	background: #f7f7f7;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+}
+
+h1, h2 {
+	font-family: sans-serif;
+	color: #fff;
 }
 
 #codeWrapper {
@@ -23,40 +28,65 @@ pre {
 	font-family: monospace;
 	font-size: 1em;
 	margin-bottom: 1em;
-	white-space: pre-wrap;
+	white-space: pre;
 	margin: 10px;
 	resize: vertical;
-	white-space: pre;
 	tab-size: 2;
-
-}
-textarea:nth-child(2) {
-	
-}
-
-textarea {
+	background: #2d2d2d;
+	color: #eee;
+	border: 1px solid #555;
+	border-radius: 6px;
+	padding: 1em;
 	height: 300px;
+
+	overflow-y: auto;
+
 }
+
+
+textarea[readonly] {
+	pointer-events: none;
+}
+
+pre[class*="language-"],
+code[class*="language-"] {
+	font-family: 'Fira Code', monospace !important;
+	font-size: 13px !important;
+}
+
+
 
 button {
 	font-size: 1.2em;
 	padding: 0.5em 1em;
 	cursor: pointer;
+	background-color: #4e3653;
+	color: white;
+	border: none;
+	border-radius: 6px;
+	margin: 0 0.5em;
 }
 
-h1,
-h2 {
-	font-family: sans-serif;
+button:hover {
+	background-color: #d910c2;
+}
+
+.button-group {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	margin-bottom: 1em;
 }
 
 #structureDiagram {
-	background: #fff;
-	border: 1px solid #ccc;
+	background: #2d2d2d;
+	border: 1px solid #444;
 	padding: 1em;
 	font-family: monospace;
 	max-height: 400px;
 	overflow-y: auto;
 	width: calc(90% - 40px);
+	border-radius: 6px;
 }
 
 .collapsible {
@@ -65,8 +95,9 @@ h2 {
 	padding: 0.2em 0.4em;
 	display: inline-block;
 	border-radius: 3px;
-	background: white;
+	background: #444;
 	margin-bottom: 0.2em;
+	color: #fff;
 }
 
 .collapsible::before {
@@ -90,9 +121,67 @@ h2 {
 	display: block;
 }
 
-#mermaidDiagram {
-	position: absolute;
-	left: 25%;
-
-	width: 100vw;
+.container {
+	width: 90%;
 }
+
+#mermaidDiagram {
+	width: 100%;
+
+	padding: 20px;
+	background: #2d2d2d;
+	border: 1px solid #444;
+	border-radius: 6px;
+	margin-top: 1em;
+	overflow-x: auto;
+}
+
+/*TESTING OWN JS-HIGHLIGHTING*/
+
+/*
+.kw {
+	color: #aad2f7;
+	font-weight: 600;
+}
+
+
+.op {
+	color: #eda0e6;
+}
+
+
+.punct {
+	color: #D4D4D4;
+}
+
+
+.id {
+	color: #ab9cfe;
+}
+
+
+.prop {
+	color: #f574dd;
+}
+
+
+.lit {
+	color: #f2865b;
+}
+
+
+.num {
+	color: #1db5e8;
+}
+
+
+.class {
+	color: #4ec94e;
+	font-style: italic;
+}
+
+.comment {
+	color: gray;
+	font-style: italic;
+}
+	*/
