@@ -1,6 +1,8 @@
 # SketchJS
 ## Fast class sketching — map your thoughts to code structure
 
+(New idea is switching to YAML and use existing parsers as well known and supported! )
+
 
 A browser-based tool to parse a custom domain-specific language (DSL) for defining classes, properties, and functions with simple indentation syntax, and generate JavaScript class code and Mermaid diagrams from it to downlad as [markdown](exampleDownloadFile.md).
 
