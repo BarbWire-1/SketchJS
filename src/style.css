@@ -1,187 +1,262 @@
+/* Define variables per theme on body */
+body.theme-pastel-dark {
+  --bg: #1e1e1e;
+  --text: #eee;
+  --surface: #2d2d2d;
+  --border: #555;
+  --accent: #4e3653;
+  --accent-hover: #d910c2;
+  --heading: #fff;
+
+  --kw: #afcae3;
+  --kw-weight: 600;
+  --op: #eda0e6;
+  --punct: #D4D4D4;
+  --id: #b3a6ff;
+  --prop: #fcb0f6;
+  --lit: #f7f9d3;
+  --num: #1db5e8;
+  --class: #97f597;
+  --class-style: italic;
+  --comment: gray;
+  --comment-style: italic;
+}
+
+body.theme-light {
+  --bg: #ffffff;
+  --text: #24292e;
+  --btn-text: white;
+  --surface: #f6f8fa;
+  --border: #d0d7de;
+  --accent: #005cc5;
+  --accent-hover: #22863a;
+  --heading: #24292e;
+
+  --kw: #005cc5;
+  --kw-weight: 600;
+  --op: #d73a49;
+  --punct: #24292e;
+  --id: #7e43eb;
+  --prop: #e36209;
+  --lit: #032f62;
+  --num: #c50097;
+  --class: #17a639;
+  --class-style: italic;
+  --comment: #6a737d;
+  --comment-style: italic;
+}
+
+body.theme-solarized {
+  --bg: #002b36;
+  --text: #93a1a1;
+  --surface: #073642;
+  --border: #586e75;
+  --accent: #268bd2;
+  --accent-hover: #859900;
+  --heading: #93a1a1;
+
+  --kw: #268bd2;
+  --kw-weight: 600;
+  --op: #d33682;
+  --punct: #839496;
+  --id: #b58900;
+  --prop: #cb4b16;
+  --lit: #2aa198;
+  --num: #6c71c4;
+  --class: #859900;
+  --class-style: italic;
+  --comment: #586e75;
+  --comment-style: italic;
+}
+
+/* Now your original selectors but with variables */
+
 body {
-	font-family: monospace;
-	background: #1e1e1e;
-	color: #eee;
-	margin: 2em auto;
-	padding: 1em;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
+  font-family: monospace;
+  background: var(--bg);
+  color: var(--text);
+  margin: 2em auto;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 h1, h2 {
-	font-family: sans-serif;
-	color: #fff;
+  font-family: sans-serif;
+  color: var(--heading);
 }
 
 #codeWrapper {
-	display: flex;
-	flex-direction: row;
-	width: 90%;
+  display: flex;
+  flex-direction: row;
+  width: 90%;
 }
 
 textarea,
 pre {
-	position: relative;
-	width: 100%;
-	box-sizing: border-box;
-	font-family: monospace;
-	font-size: 1em;
-	margin-bottom: 1em;
-	white-space: pre;
-	margin: 10px;
-	resize: vertical;
-	tab-size: 2;
-	background: #2d2d2d;
-	color: #eee;
-	border: 1px solid #555;
-	border-radius: 6px;
-	padding: 1em;
-	height: 300px;
-
-	overflow-y: auto;
-
+  position: relative;
+  box-sizing: border-box;
+  font-family: monospace;
+  font-size: 1em;
+  margin-bottom: 1em;
+  white-space: pre;
+  margin: 10px;
+  resize: vertical;
+  tab-size: 2;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1em;
+  height: 300px;
+  overflow-y: auto;
+  width: 45%;
+  transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
 }
 
+pre {
+  width: 100%;
+}
 
 textarea[readonly] {
-	pointer-events: none;
+  pointer-events: none;
+  width: 55%;
 }
 
 pre[class*="language-"],
 code[class*="language-"] {
-	font-family: 'Fira Code', monospace !important;
-	font-size: 13px !important;
+  font-family: 'Fira Code', monospace !important;
+  font-size: 13px !important;
 }
 
-
-
 button {
-	font-size: 1.2em;
-	padding: 0.5em 1em;
-	cursor: pointer;
-	background-color: #4e3653;
-	color: white;
-	border: none;
-	border-radius: 6px;
-	margin: 0 0.5em;
+  font-size: 1.2em;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  background-color: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  margin: 0 0.5em;
+  transition: background 0.3s ease;
+  color: white
 }
 
 button:hover {
-	background-color: #d910c2;
+  background-color: var(--accent-hover);
 }
 
 .button-group {
-	display: flex;
-	justify-content: center;
-	flex-wrap: wrap;
-	margin-bottom: 1em;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1em;
 }
 
 #structureDiagram {
-	background: #2d2d2d;
-	border: 1px solid #444;
-	padding: 1em;
-	font-family: monospace;
-	max-height: 400px;
-	overflow-y: auto;
-	width: calc(90% - 40px);
-	border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1em;
+  font-family: monospace;
+  max-height: 400px;
+  overflow-y: auto;
+  width: calc(90% - 40px);
+  border-radius: 6px;
+  color: var(--text);
 }
 
 .collapsible {
-	cursor: pointer;
-	user-select: none;
-	padding: 0.2em 0.4em;
-	display: inline-block;
-	border-radius: 3px;
-	background: #444;
-	margin-bottom: 0.2em;
-	color: #fff;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.2em 0.4em;
+  display: inline-block;
+  border-radius: 3px;
+
+  margin-bottom: 0.2em;
+  color: var(--heading);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .collapsible::before {
-	content: "▶\2002";
-	display: inline-block;
-	transform-origin: center;
-	transition: transform 0.3s ease;
-	font-size: 18px;
+  content: "▶\2002";
+  display: inline-block;
+  transform-origin: center;
+  transition: transform 0.3s ease;
+  font-size: 18px;
 }
 
 .collapsible.active::before {
-	transform: rotate(90deg);
+  transform: rotate(90deg);
 }
 
 .content {
-	margin-left: 1.2em;
-	display: none;
+  margin-left: 1.2em;
+  display: none;
 }
 
 .content.active {
-	display: block;
+  display: block;
 }
 
 .container {
-	width: 90%;
+  width: 90%;
 }
 
 #mermaidDiagram {
-	width: 100%;
-
-	padding: 20px;
-	background: #2d2d2d;
-	border: 1px solid #444;
-	border-radius: 6px;
-	margin-top: 1em;
-	overflow-x: auto;
+  width: calc(100% - 48px);
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-top: 1em;
+  overflow-x: auto;
+  color: var(--text);
 }
 
-/*TESTING OWN JS-HIGHLIGHTING*/
+/* Syntax Highlighting */
 
-/*
+.kw, .op, .punct, .id, .prop, .lit, .num, .class, .comment {
+  transition: color 0.2s ease, font-style 0.2s ease, font-weight 0.2s ease;
+}
+
 .kw {
-	color: #aad2f7;
-	font-weight: 600;
+  color: var(--kw);
+  font-weight: var(--kw-weight);
 }
-
 
 .op {
-	color: #eda0e6;
+  color: var(--op);
 }
-
 
 .punct {
-	color: #D4D4D4;
+  color: var(--punct);
 }
-
 
 .id {
-	color: #ab9cfe;
+  color: var(--id);
 }
-
 
 .prop {
-	color: #f574dd;
+  color: var(--prop);
 }
-
 
 .lit {
-	color: #f2865b;
+  color: var(--lit);
 }
-
 
 .num {
-	color: #1db5e8;
+  color: var(--num);
 }
 
-
 .class {
-	color: #4ec94e;
-	font-style: italic;
+  color: var(--class);
+  font-style: var(--class-style);
+  font-weight: bold
 }
 
 .comment {
-	color: gray;
-	font-style: italic;
+  color: var(--comment);
+  font-style: var(--comment-style);
 }
-	*/
