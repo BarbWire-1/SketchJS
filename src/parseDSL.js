@@ -1,4 +1,5 @@
 // TODO - REFACTOR
+// TODO best prepare dat in a wy that I never again need to touch them for structure or mermaid other than just using!!!!!!!!!!
 
 //TODO - inherited class does not draw relationships to comp in own props!
 (() => {
@@ -276,7 +277,7 @@
 
 			currentLineIndex++;
 		}
-//console.log(JSON.stringify(data))
+		//console.log(JSON.stringify(data))
 		return data;
 	}
 
@@ -289,272 +290,7 @@
 		const match = typeName.match(/^(\w+)\[\]$/);
 		return match && isClassType(match[ 1 ], classes);
 	}
-/*
-	function generateJS() {
-		const inputText = document.getElementById("dslInput").value;
-		const parsedData = parseDSL(inputText);
 
-		let outputCode = "// AUTO-GENERATED NAKED SKELETON — meant to be fleshed out step-by-step\n\n";
-
-
-		outputCode += "const DEBUG = true;\n";
-		outputCode += "function log(msg) {\n  if (DEBUG) console.log(msg);\n}\n\n";
-
-		// Helpers with closures over parsedData.classes
-		function isClassTypeLocal(type) {
-			return isClassType(type, parsedData.classes);
-		}
-
-		function isClassArrayTypeLocal(type) {
-			return isClassArrayType(type, parsedData.classes);
-		}
-
-		function renderNestedObjectInit(typeProps) {
-			const parts = typeProps.map((prop) => {
-				const val = prop.default !== null ? prop.default : "null";
-				return `${prop.name}: ${val}`;
-			});
-			return `{ ${parts.join(", ")} }`;
-		}
-
-		function parseMethodSignature(methodSignature) {
-			// Remove return type (e.g., ": string", ": boolean") at the end
-			methodSignature = methodSignature.replace(/:\s*\w+\s*(\/\/.*)?$/, "").trim();
-
-			const match = methodSignature.match(/^(\w+)\((.*)\)$/);
-			if (!match) return { name: methodSignature, params: "" };
-
-			const name = match[ 1 ];
-			const params = match[ 2 ]
-				.split(",")
-				.map((param) => param.trim().split(":")[ 0 ]) // remove types
-				.filter(Boolean)
-				.join(", ");
-
-			return { name, params };
-		}
-
-
-
-		function generateClassConstructor(cls) {
-			let constructorCode = `  constructor(args = {}) {\n`;
-
-			if (cls.baseClass) {
-				constructorCode += `    super(args);\n`;
-			}
-
-			// Assign constructor parameters with defaults (if you want to support explicit params, else skip)
-			// Assuming you don't have explicit params, just use props from args.
-
-			for (const prop of cls.props) {
-				if (prop.type === "inlineObject") {
-					constructorCode += `    this.${prop.name} = args.${prop.name} ?? ${renderNestedObjectInit(prop.typeProps)};\n`;
-				} else if (prop.default !== null && prop.default !== undefined) {
-					constructorCode += `    this.${prop.name} = args.${prop.name} ?? ${prop.default};\n`;
-				} else if (prop.type) {
-					if (isClassTypeLocal(prop.type)) {
-						constructorCode += `    this.${prop.name} = args.${prop.name} ?? new ${prop.type}();\n`;
-					} else if (isClassArrayTypeLocal(prop.type)) {
-						constructorCode += `    this.${prop.name} = args.${prop.name} ?? [];\n`;
-					} else {
-						constructorCode += `    this.${prop.name} = args.${prop.name} ?? null;\n`;
-					}
-				} else {
-					constructorCode += `    this.${prop.name} = args.${prop.name} ?? null;\n`;
-				}
-			}
-
-			constructorCode += "  }\n\n";
-			return constructorCode;
-		}
-
-
-		function generateClassMethods(cls) {
-			let methodsCode = "";
-			for (const methodSignature of cls.methods) {
-				const { name, params } = parseMethodSignature(methodSignature);
-				methodsCode += `  ${name}(${params}) {\n`;
-				methodsCode += `    log("Running '${name}'");\n`;
-				methodsCode += `    // TODO: Implement ${name}\n`;
-				methodsCode += `  }\n\n`;
-			}
-			return methodsCode;
-		}
-
-		function generateFunctionCode(funcSignature) {
-			const { name, params } = parseMethodSignature(funcSignature);
-			let functionCode = `function ${name}(${params}) {\n`;
-			functionCode += `  log("Running '${name}'");\n`;
-			functionCode += `  // TODO: Implement ${name}\n`;
-			functionCode += `}\n\n`;
-			return functionCode;
-		}
-
-		// Generate classes
-		for (const className in parsedData.classes) {
-			if ([ "props", "methods", "parameters" ].includes(className)) continue;
-			const cls = parsedData.classes[ className ];
-			const extendsPart = cls.baseClass ? ` extends ${cls.baseClass}` : "";
-			outputCode += `class ${className}${extendsPart} {\n`;
-			outputCode += generateClassConstructor(cls);
-			outputCode += generateClassMethods(cls);
-			outputCode += "}\n\n";
-		}
-
-		// Generate standalone functions
-		for (const func of parsedData.functions) {
-			outputCode += generateFunctionCode(func);
-		}
-
-		document.getElementById("output").textContent = outputCode.trim();
-		renderStructureDiagram(parsedData);
-		renderMermaidDiagram(parsedData); // Assuming you want to keep this call
-	}
-*/
-	/*
-	// Patch the generateJS function to skip schemas in class output and handle schema-typed props correctly
-	function generateJS() {
-		const inputText = document.getElementById("dslInput").value;
-		const parsedData = parseDSL(inputText);
-
-		let outputCode = "// AUTO-GENERATED NAKED SKELETON — meant to be fleshed out step-by-step\n\n";
-
-		outputCode += "const DEBUG = true;\n";
-		outputCode += "function log(msg) {\n  if (DEBUG) console.log(msg);\n}\n\n";
-
-		function isClassTypeLocal(type) {
-			return isClassType(type, parsedData.classes);
-		}
-
-		function isClassArrayTypeLocal(type) {
-			return isClassArrayType(type, parsedData.classes);
-		}
-
-		function isSchemaType(type) {
-			return parsedData.schemas && Object.prototype.hasOwnProperty.call(parsedData.schemas, type);
-		}
-
-		function renderNestedObjectInit(typeProps) {
-			const parts = typeProps.map((prop) => {
-				const val = prop.default !== null ? prop.default : "null";
-				return `${prop.name}: ${val}`;  // keys without quotes here
-			});
-			return `{ ${parts.join(", ")} }`;
-		}
-
-
-		function parseMethodSignature(methodSignature) {
-			methodSignature = methodSignature.replace(/:\s*\w+\s*(\/\/.*)?$/, "").trim();
-			const match = methodSignature.match(/^(\w+)\((.*)\)$/);
-			if (!match) return { name: methodSignature, params: "" };
-			const name = match[ 1 ];
-			const params = match[ 2 ]
-				.split(",")
-				.map((param) => param.trim().split(":")[ 0 ])
-				.filter(Boolean)
-				.join(", ");
-			return { name, params };
-		}
-
-		function generateClassConstructor(cls) {
-			let constructorCode = `  constructor(args = {}) {\n`;
-			if (cls.baseClass) {
-				constructorCode += `    super(args);\n`;
-			}
-
-			for (const prop of cls.props) {
-				if (prop.type && parsedData.schemas && parsedData.schemas[ prop.type ]) {
-					constructorCode += `    this.${prop.name} = args.${prop.name} ?? {...${prop.type}};\n`;
-				} else if (prop.type === "inlineObject") {
-					constructorCode += `    this.${prop.name} = args.${prop.name} ?? ${renderNestedObjectInit(prop.typeProps)};\n`;
-				} else if (prop.default !== null && prop.default !== undefined) {
-					constructorCode += `    this.${prop.name} = args.${prop.name} ?? ${prop.default};\n`;
-				} else if (prop.type) {
-					if (isClassTypeLocal(prop.type)) {
-						constructorCode += `    this.${prop.name} = args.${prop.name} ?? new ${prop.type}();\n`;
-					} else if (isClassArrayTypeLocal(prop.type)) {
-						constructorCode += `    this.${prop.name} = args.${prop.name} ?? [];\n`;
-					} else if (isSchemaType(prop.type)) {
-						constructorCode += `    this.${prop.name} = args.${prop.name} ?? {};\n`;
-					} else {
-						constructorCode += `    this.${prop.name} = args.${prop.name} ?? null;\n`;
-					}
-				} else {
-					constructorCode += `    this.${prop.name} = args.${prop.name} ?? null;\n`;
-				}
-			}
-
-			constructorCode += "  }\n\n";
-			return constructorCode;
-		}
-
-		function generateClassMethods(cls) {
-			let methodsCode = "";
-			for (const methodSignature of cls.methods) {
-				const { name, params } = parseMethodSignature(methodSignature);
-				methodsCode += `  ${name}(${params}) {\n`;
-				methodsCode += `    log(\"Running '${name}'\");\n`;
-				methodsCode += `    // TODO: Implement ${name}\n`;
-				methodsCode += `  }\n\n`;
-			}
-			return methodsCode;
-		}
-
-		function generateFunctionCode(funcSignature) {
-			const { name, params } = parseMethodSignature(funcSignature);
-			let functionCode = `function ${name}(${params}) {\n`;
-			functionCode += `  log(\"Running '${name}'\");\n`;
-			functionCode += `  // TODO: Implement ${name}\n`;
-			functionCode += `}\n\n`;
-			return functionCode;
-		}
-
-		for (const className in parsedData.classes) {
-			const rawName = className.replace(/^class\s+/, "");
-			const cls = parsedData.classes[ className ];
-			const extendsPart = cls.baseClass ? ` extends ${cls.baseClass}` : "";
-			outputCode += `class ${rawName}${extendsPart} {\n`;
-			outputCode += generateClassConstructor(cls);
-			outputCode += generateClassMethods(cls);
-			outputCode += `}\n\n`;
-		}
-
-		// Generate classes from schemas as well
-		for (const schemaName in parsedData.schemas) {
-			const schema = parsedData.schemas[ schemaName ];
-			const parts = schema.props.map(prop => {
-				const defaultVal = prop.default !== null && prop.default !== undefined ? prop.default : 'null';
-				return `  ${prop.name}: ${defaultVal}`;
-			});
-
-			outputCode += `const ${schemaName} = {\n${parts.join(",\n")}\n};\n\n`;
-		}
-
-
-
-
-		for (const func of parsedData.functions) {
-			outputCode += generateFunctionCode(func);
-		}
-
-		const outputCodeBlock = document.getElementById("output");
-
-// 1. Set generated JS code
-outputCodeBlock.textContent = outputCode.trim();
-
-// 2. Manually trigger Prism highlighting
-// This line is 100% required for dynamic content
-if (window.Prism && typeof Prism.highlightElement === 'function') {
-	Prism.highlightElement(outputCodeBlock);
-} else {
-	console.warn("Prism.js not loaded correctly.");
-}
-
-		renderStructureDiagram(parsedData);
-		renderMermaidDiagram(parsedData);
-	}
-
-*/
 	function generateJS() {
 		const inputText = document.getElementById("dslInput").value;
 		const parsedData = parseDSL(inputText);
@@ -723,26 +459,26 @@ if (window.Prism && typeof Prism.highlightElement === 'function') {
 			const regex = /\/\/.*$|\/\*[\s\S]*?\*\//gm;
 			return code.replace(regex, comment => `<span class="comment">${comment}</span>`);
 		}
-/*
-		let codeWithComments = wrapComments(outputCode);
+		/*
+				let codeWithComments = wrapComments(outputCode);
 
-		// Step 2: Split by comment spans so you isolate comments
-		const parts = codeWithComments.split(/(<span class="comment">[\s\S]*?<\/span>)/g);
+				// Step 2: Split by comment spans so you isolate comments
+				const parts = codeWithComments.split(/(<span class="comment">[\s\S]*?<\/span>)/g);
 
-		// Step 3: Highlight only the non-comment parts
-		const highlightedParts = parts.map(part => {
-			if (part.startsWith('<span class="comment">')) {
-				// This is a comment - return as-is
-				return part;
-			}
-			// Non-comment code - apply your existing highlight here
-			return highlightNonCommentCode(part);
-		});
+				// Step 3: Highlight only the non-comment parts
+				const highlightedParts = parts.map(part => {
+					if (part.startsWith('<span class="comment">')) {
+						// This is a comment - return as-is
+						return part;
+					}
+					// Non-comment code - apply your existing highlight here
+					return highlightNonCommentCode(part);
+				});
 
-		// Step 4: Join everything
-		const finalCode = highlightedParts.join('');
+				// Step 4: Join everything
+				const finalCode = highlightedParts.join('');
 
-*/
+		*/
 		const outputCodeBlock = document.getElementById("output");
 		outputCodeBlock.innerHTML = wrapComments(outputCode.trim());
 
@@ -1041,10 +777,10 @@ if (window.Prism && typeof Prism.highlightElement === 'function') {
 			if (cls.baseClass && isClassType(cls.baseClass)) {
 				addInheritanceRelation(className, cls.baseClass);
 			}
-/*
-			// Get inherited members
-			const inherited = getInheritedMembers(className, parsed);
-			*/
+			/*
+						// Get inherited members
+						const inherited = getInheritedMembers(className, parsed);
+						*/
 
 			const classBodyLines = [
 				...renderConstructor(cls),
