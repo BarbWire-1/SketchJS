@@ -35,7 +35,9 @@
 	</div>
 
 	<section id="codeWrapper">
-		<textarea id="dslInput" placeholder="Paste your mini-DSL here...">AnimationEngine:
+		<textarea id="dslInput" placeholder="Paste your mini-DSL here...">
+// your sketch goes here
+AnimationEngine:
 	props:
 		frameRate: number = 60
 		isRunning: boolean = false
@@ -83,10 +85,15 @@ schema WeaponType:
 	props:
 		id: string
 		baseDamage: number = 10
+		usage: string
 
 Weapon:
 	props:
-		weaponType: WeaponType</textarea>
+		weaponType: WeaponType
+	methods:
+		use()
+
+	</textarea>
 
 		<!-- Use <pre><code> for Prism -->
 		<pre id="output">// JavaScript output will appear here</pre>
