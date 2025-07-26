@@ -3,3 +3,7 @@
 
 notes.md
 *.old
+*.test
+
+
+php/
